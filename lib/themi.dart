@@ -12,9 +12,6 @@ class Themi extends ConsumerStatefulWidget {
 
 class Mystate extends ConsumerState<Themi> {
   bool _visible = false;
-  var _errorms = '';
-  bool validate = false;
-  bool validates = false;
 
   void _login() async {
     final email = ref.read(emailprovider);
@@ -22,36 +19,37 @@ class Mystate extends ConsumerState<Themi> {
     final pref = await ref.read(spprovider.future);
     final storedemail = pref.getString('email');
     final storedpassword = pref.getString('password');
-    if (email.isNotEmpty && password.isNotEmpty) {
-      if (email == storedemail && password == storedpassword) {
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorms = "Email or password cannot be empty";
+      });
+    } else if (email == storedemail && password == storedpassword) {
+      setState(() {
         emailcontroller.clear();
         passwordcontroller.clear();
         ref.read(emailprovider.notifier).state = '';
         ref.read(passwordprovider.notifier).state = '';
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => Sucesspage()));
-      } else {
-        setState(() {
-          _errorms = "Invalid email or password";
-        });
-      }
-    }
-    if (email.isEmpty) {
-      validate = true;
-    }
-    if (password.isEmpty) {
-      validates = true;
+        _errorms = '';
+      });
+
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => Sucesspage()));
+    } else {
+      setState(() {
+        _errorms = "Invalid email or password";
+      });
     }
   }
 
   late TextEditingController emailcontroller;
   late TextEditingController passwordcontroller;
-
+  late var _errorms;
   @override
   void initState() {
     super.initState();
     emailcontroller = TextEditingController();
     passwordcontroller = TextEditingController();
+    _errorms = '';
   }
 
   @override
@@ -62,11 +60,14 @@ class Mystate extends ConsumerState<Themi> {
   }
 
   void _forgotPassword() {
-    emailcontroller.clear();
-    passwordcontroller.clear();
-    ref.read(emailprovider.notifier).state = '';
-    ref.read(passwordprovider.notifier).state = '';
-    _errorms = '';
+    setState(() {
+      emailcontroller.clear();
+      passwordcontroller.clear();
+      ref.read(emailprovider.notifier).state = '';
+      ref.read(passwordprovider.notifier).state = '';
+      _errorms = '';
+    });
+
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => Forgotpasswordpage()));
   }
@@ -122,7 +123,6 @@ class Mystate extends ConsumerState<Themi> {
                       fontSize: 19,
                     ),
                     decoration: InputDecoration(
-                      errorText: validate ? "Value Can't Be Empty" : null,
                       hintText: 'Enter the user ID',
                       hintStyle:
                           const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
@@ -163,7 +163,6 @@ class Mystate extends ConsumerState<Themi> {
                       fontSize: 19,
                     ),
                     decoration: InputDecoration(
-                      errorText: validates ? "Value Can't Be Empty" : null,
                       hintText: 'Enter the password',
                       hintStyle:
                           const TextStyle(color: Color.fromARGB(255, 0, 0, 0)),

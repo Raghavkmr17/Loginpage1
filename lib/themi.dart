@@ -1,60 +1,74 @@
 import 'package:currency_converter/ForgotPasswordPage.dart';
 import 'package:currency_converter/success_page.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:currency_converter/providers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class Themi extends StatefulWidget {
+class Themi extends ConsumerStatefulWidget {
   const Themi({super.key});
   @override
-  Mystate createState() => Mystate();
+  ConsumerState<Themi> createState() => Mystate();
 }
 
-class Mystate extends State {
-  final _email = TextEditingController();
-  final _password = TextEditingController();
+class Mystate extends ConsumerState<Themi> {
+  bool _visible = false;
+  var _errorms = '';
   bool validate = false;
   bool validates = false;
-  String _errorms = '';
-  bool _visible = false;
+
+  void _login() async {
+    final email = ref.read(emailprovider);
+    final password = ref.read(passwordprovider);
+    final pref = await ref.read(spprovider.future);
+    final storedemail = pref.getString('email');
+    final storedpassword = pref.getString('password');
+    if (email.isNotEmpty && password.isNotEmpty) {
+      if (email == storedemail && password == storedpassword) {
+        emailcontroller.clear();
+        passwordcontroller.clear();
+        ref.read(emailprovider.notifier).state = '';
+        ref.read(passwordprovider.notifier).state = '';
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => Sucesspage()));
+      } else {
+        setState(() {
+          _errorms = "Invalid email or password";
+        });
+      }
+    }
+    if (email.isEmpty) {
+      validate = true;
+    }
+    if (password.isEmpty) {
+      validates = true;
+    }
+  }
+
+  late TextEditingController emailcontroller;
+  late TextEditingController passwordcontroller;
+
+  @override
+  void initState() {
+    super.initState();
+    emailcontroller = TextEditingController();
+    passwordcontroller = TextEditingController();
+  }
 
   @override
   void dispose() {
-    _email.dispose();
-    _password.dispose();
+    emailcontroller.dispose();
+    passwordcontroller.dispose();
     super.dispose();
   }
 
-  void _login() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? savedEmail = prefs.getString('email');
-    String? savedPassword = prefs.getString('password');
-
-    setState(() {
-      validate = _email.text.isEmpty;
-      validates = _password.text.isEmpty;
-      if (!validate && !validates) {
-        if (_email.text == savedEmail && _password.text == savedPassword) {
-          _errorms = "";
-          _email.text = '';
-          _password.text = '';
-          Navigator.push(
-              context, MaterialPageRoute(builder: (_) => Sucesspage()));
-        } else {
-          _errorms = "Invalid email or password";
-          _visible = true;
-        }
-      }
-    });
-  }
-
   void _forgotPassword() {
-    setState(() {
-      _email.text = '';
-      _password.text = '';
-      _errorms = "";
-    });
+    emailcontroller.clear();
+    passwordcontroller.clear();
+    ref.read(emailprovider.notifier).state = '';
+    ref.read(passwordprovider.notifier).state = '';
+    _errorms = '';
     Navigator.push(
-        context, MaterialPageRoute(builder: (_) => Forgotpasswordpage()));
+        context, MaterialPageRoute(builder: (context) => Forgotpasswordpage()));
   }
 
   @override
@@ -100,13 +114,14 @@ class Mystate extends State {
                 Padding(
                   padding: const EdgeInsets.all(18.0),
                   child: TextField(
-                    controller: _email,
+                    controller: emailcontroller,
+                    onChanged: (value) =>
+                        ref.read(emailprovider.notifier).state = value,
                     style: const TextStyle(
                       color: Color.fromARGB(255, 58, 40, 34),
                       fontSize: 19,
                     ),
                     decoration: InputDecoration(
-                      labelText: 'Email',
                       errorText: validate ? "Value Can't Be Empty" : null,
                       hintText: 'Enter the user ID',
                       hintStyle:
@@ -140,13 +155,14 @@ class Mystate extends State {
                   padding: const EdgeInsets.only(
                       left: 18, top: 7, right: 18, bottom: 5),
                   child: TextField(
-                    controller: _password,
+                    controller: passwordcontroller,
+                    onChanged: (value) =>
+                        ref.read(passwordprovider.notifier).state = value,
                     style: const TextStyle(
                       color: Color.fromARGB(255, 58, 40, 34),
                       fontSize: 19,
                     ),
                     decoration: InputDecoration(
-                      labelText: 'password',
                       errorText: validates ? "Value Can't Be Empty" : null,
                       hintText: 'Enter the password',
                       hintStyle:

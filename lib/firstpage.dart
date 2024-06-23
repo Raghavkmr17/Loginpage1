@@ -48,14 +48,12 @@ class FirstpageState extends State<Firstpage> {
                   ),
                   TextButton(
                     onPressed: () {
-                      setState(() {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => Themi(),
-                          ),
-                        );
-                      });
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Themi(),
+                        ),
+                      );
                     },
                     style: TextButton.styleFrom(
                       shape: ContinuousRectangleBorder(
@@ -75,14 +73,12 @@ class FirstpageState extends State<Firstpage> {
                   ),
                   TextButton(
                     onPressed: () {
-                      setState(() {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => Newacc(),
-                          ),
-                        );
-                      });
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Newacc(),
+                        ),
+                      );
                     },
                     style: TextButton.styleFrom(
                       shape: ContinuousRectangleBorder(

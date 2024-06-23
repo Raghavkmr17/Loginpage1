@@ -1,29 +1,48 @@
 import 'package:currency_converter/firstpage.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_pw_validator/flutter_pw_validator.dart';
+import 'package:currency_converter/providers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class Newacc extends StatefulWidget {
+class Newacc extends ConsumerStatefulWidget {
   const Newacc({super.key});
 
   @override
-  State<Newacc> createState() => _NewaccState();
+  ConsumerState<Newacc> createState() => _NewaccState();
 }
 
-class _NewaccState extends State<Newacc> {
-  TextEditingController emails = TextEditingController();
-  final passwords = TextEditingController();
+class _NewaccState extends ConsumerState<Newacc> {
   bool _visible = false;
   bool isSuccess = false;
   String errorms = "";
+  late TextEditingController emailController;
+  late TextEditingController passwordController;
+
+  @override
+  void initState() {
+    super.initState();
+    emailController = TextEditingController();
+    passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
   bool validatemail() {
-    final bool isValid = EmailValidator.validate(emails.text.trim());
+    final bool isValid = EmailValidator.validate(ref.read(emailprovider));
     return isValid;
   }
 
   void _createAccount() async {
-    if (emails.text.isEmpty || passwords.text.isEmpty) {
+    final email = ref.read(emailprovider);
+    final password = ref.read(passwordprovider);
+
+    if (email.isEmpty || password.isEmpty) {
       setState(() {
         errorms = "Email and password cannot be empty";
       });
@@ -32,11 +51,15 @@ class _NewaccState extends State<Newacc> {
         errorms = "Enter a valid email address";
       });
     } else {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('email', emails.text.trim());
-      await prefs.setString('password', passwords.text.trim());
-      setState(() {
+      setState(() async {
         if (isSuccess) {
+          final prefs = await ref.read(spprovider.future);
+          await prefs.setString('email', email);
+          await prefs.setString('password', password);
+          emailController.clear();
+          passwordController.clear();
+          ref.read(emailprovider.notifier).state = '';
+          ref.read(passwordprovider.notifier).state = '';
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const Firstpage()),
@@ -89,7 +112,9 @@ class _NewaccState extends State<Newacc> {
                       padding: const EdgeInsets.only(
                           top: 200, left: 20, right: 20, bottom: 20),
                       child: TextField(
-                        controller: emails,
+                        controller: emailController,
+                        onChanged: (value) =>
+                            ref.read(emailprovider.notifier).state = value,
                         style: const TextStyle(
                             fontSize: 19, color: Color.fromARGB(255, 0, 0, 0)),
                         decoration: const InputDecoration(
@@ -108,7 +133,9 @@ class _NewaccState extends State<Newacc> {
                       padding: const EdgeInsets.only(
                           top: 10, right: 20, left: 20, bottom: 20),
                       child: TextField(
-                        controller: passwords,
+                        controller: passwordController,
+                        onChanged: (value) =>
+                            ref.read(passwordprovider.notifier).state = value,
                         style: const TextStyle(
                             fontSize: 19,
                             color: Color.fromARGB(255, 89, 63, 53)),
@@ -162,7 +189,12 @@ class _NewaccState extends State<Newacc> {
                             isSuccess = true;
                           });
                         },
-                        controller: passwords),
+                        onFail: () {
+                          setState(() {
+                            isSuccess = false;
+                          });
+                        },
+                        controller: passwordController),
                     TextButton(
                       onPressed: () {
                         _createAccount();

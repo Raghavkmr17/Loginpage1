@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_pw_validator/flutter_pw_validator.dart';
+import 'package:currency_converter/providers.dart';
 
-class Forgotpasswordpage extends StatefulWidget {
+class Forgotpasswordpage extends ConsumerStatefulWidget {
   @override
   _ForgotpasswordpageState createState() => _ForgotpasswordpageState();
 }
 
-class _ForgotpasswordpageState extends State<Forgotpasswordpage> {
+class _ForgotpasswordpageState extends ConsumerState<Forgotpasswordpage> {
   final TextEditingController _oldpass = TextEditingController();
   final TextEditingController _newpass = TextEditingController();
   String _errorms = "";
   String _errorms1 = "";
-  bool _vali = false; // Used to toggle password visibility
+  bool _vali = false;
   bool isSuccess = false;
   @override
   void dispose() {
@@ -22,14 +23,15 @@ class _ForgotpasswordpageState extends State<Forgotpasswordpage> {
   }
 
   void _changePassword() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? currentPass = prefs.getString('password');
-
+    final prefs = await ref.read(spprovider.future);
+    final currentPass = prefs.getString('password');
+    final newpassword = ref.read(newpasswordprovider);
+    final oldpassword = ref.read(oldpasswordprovider);
     setState(() {
-      if (_oldpass.text == currentPass) {
-        if (_newpass.text.isNotEmpty) {
+      if (oldpassword == currentPass) {
+        if (newpassword.isNotEmpty) {
           if (isSuccess) {
-            prefs.setString('password', _newpass.text);
+            prefs.setString('password', newpassword);
             Navigator.pop(context);
           } else {
             _errorms1 = "Enter a valid password";
@@ -86,6 +88,9 @@ class _ForgotpasswordpageState extends State<Forgotpasswordpage> {
                           top: 200, left: 20, right: 20, bottom: 20),
                       child: TextField(
                         controller: _oldpass,
+                        onChanged: (value) => ref
+                            .read(oldpasswordprovider.notifier)
+                            .state = value,
                         style: TextStyle(
                             fontSize: 19, color: Color.fromARGB(255, 0, 0, 0)),
                         decoration: InputDecoration(
@@ -104,6 +109,9 @@ class _ForgotpasswordpageState extends State<Forgotpasswordpage> {
                           top: 10, right: 20, left: 20, bottom: 20),
                       child: TextField(
                         controller: _newpass,
+                        onChanged: (value) => ref
+                            .read(newpasswordprovider.notifier)
+                            .state = value,
                         style: TextStyle(
                             fontSize: 19,
                             color: Color.fromARGB(255, 89, 63, 53)),
@@ -145,6 +153,11 @@ class _ForgotpasswordpageState extends State<Forgotpasswordpage> {
                         onSuccess: () {
                           setState(() {
                             isSuccess = true;
+                          });
+                        },
+                        onFail: () {
+                          setState(() {
+                            isSuccess = false;
                           });
                         },
                         controller: _newpass),

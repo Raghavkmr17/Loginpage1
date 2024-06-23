@@ -1,8 +1,13 @@
 import 'package:currency_converter/firstpage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  runApp(const Myapps());
+  runApp(
+    ProviderScope(
+      child: const Myapps(),
+    ),
+  );
 }
 
 class Myapps extends StatelessWidget {
